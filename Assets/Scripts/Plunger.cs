@@ -1,45 +1,47 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class Plunger : MonoBehaviour
+[RequireComponent(typeof(Rigidbody))]
+public class PlungerPuller : MonoBehaviour
 {
-   public float pullForce = 200f;
-    public float maxPull = 0.5f;
-    public KeyCode inputKey = KeyCode.Space;
+    public float inclineAngleX = -15f; // pente de la table
+    public float pullForce = 200f;     // force d’aspiration vers l’arrière
+    public KeyCode pullKey = KeyCode.Space;
 
     private Rigidbody rb;
-    private Vector3 restPosition;
+    private Vector3 pullDirection;
+
     private bool isPulling = false;
 
     void Start()
     {
         rb = GetComponent<Rigidbody>();
-        restPosition = transform.position;
+
+        // Calcul direction de recul en fonction de l'angle X
+        float angleRad = inclineAngleX * Mathf.Deg2Rad;
+        pullDirection = new Vector3(0f, Mathf.Sin(angleRad), -Mathf.Cos(angleRad));
     }
 
     void Update()
     {
-        if (Input.GetKey(inputKey))
-        {
+        if (Input.GetKey(pullKey))
             isPulling = true;
-        }
-
-        if (Input.GetKeyUp(inputKey))
-        {
+        if (Input.GetKeyUp(pullKey))
             isPulling = false;
-        }
     }
 
     void FixedUpdate()
     {
         if (isPulling)
         {
-            if (Vector3.Distance(transform.position, restPosition) < maxPull)
-            {
-                // Applique une force vers l arriere
-                rb.AddForce(transform.forward * pullForce);
-            }
+            rb.AddForce(-pullDirection * pullForce, ForceMode.Force);
         }
+    }
+
+    void OnDrawGizmos()
+    {
+        Gizmos.color = Color.green;
+        float angleRad = inclineAngleX * Mathf.Deg2Rad;
+        Vector3 dir = new Vector3(0f, Mathf.Sin(angleRad), -Mathf.Cos(angleRad));
+        Gizmos.DrawRay(transform.position, dir * 2f);
     }
 }
